@@ -1,0 +1,24 @@
+# spangap/audio — generic I2S audio engine + ITS packet server.
+#
+# Drives one audio device (single rate, single block size) over I2S: streams
+# the live mic to every connected ITS client as seccam-compatible
+# [av_hdr][payload] packets, and mixes everything clients send back — plus
+# local WAV playback — into the speaker. The straddle owns the I2S engine; a
+# board contributes only Kconfig pin/mode data and, for an I2C/AT-controlled
+# input codec (ES7210), an optional audioRegisterCodec() shim.
+#
+# Reachability is the browser DataChannel "audio:1": the audio task runs an ITS
+# server on port 1 and the web straddle bridges task:port → ITS.
+schema_version: 1
+name: spangap/audio
+prefix: audio
+version: 0.1.0
+firmware: esp-idf
+platforms: [idf]
+requires:
+  - spangap/spangap-net
+# Auto-init: folded into the buildable's generated spangapInitStraddles().
+# audioInit() seeds storage defaults, registers the CLI, and spawns the audio
+# task (which opens its ITS server and brings I2S up lazily on first use).
+init:
+  - call: audioInit
