@@ -12,7 +12,7 @@
 schema_version: 1
 name: spangap/audio
 prefix: audio
-version: 0.1.0
+version: 0.0.0
 firmware: esp-idf
 platforms: [idf]
 requires:
