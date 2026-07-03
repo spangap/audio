@@ -74,12 +74,15 @@ config AUDIO_WAV_BUF_MS
 
 # I2S DMA descriptor pool, per channel. These buffers must live in internal
 # DMA-capable RAM, which is scarce on a loaded board (WiFi static RX + SPI DMA
-# already compete for it), so keep them small: desc_num * frame_num frames of
-# buffering is plenty when the engine paces itself one block at a time. Raise
-# them if full-duplex capture+playback underruns on a less constrained board.
+# already compete for it), so keep them modest: desc_num * frame_num frames is
+# the whole playback cushion — the MAX98357A has no FIFO, so this DMA pool is
+# the ONLY thing that hides a late refill. At 128 frames, 6 descriptors is
+# ~48 ms at 16 kHz, enough to ride out a scheduling stall (e.g. an LXMF burst
+# on the same core) without the speaker starving. Lower to 3 to reclaim ~1.5 KB
+# internal RAM if a board never plays audio under load; raise for more slack.
 config AUDIO_DMA_DESC_NUM
     int "I2S DMA descriptor count (per channel)"
-    default 3
+    default 6
 config AUDIO_DMA_FRAME_NUM
     int "I2S DMA frames per descriptor"
     default 128

@@ -344,6 +344,12 @@ static void ensureTx(bool want) {
                                                       I2S_ROLE_MASTER);
     cc.dma_desc_num  = CONFIG_AUDIO_DMA_DESC_NUM;
     cc.dma_frame_num = CONFIG_AUDIO_DMA_FRAME_NUM;
+    /* Clear each DMA buffer once the peripheral has sent it. On a true underrun
+     * (the audio task starved of CPU, e.g. an LXMF burst) the driver then
+     * re-sends zeros instead of replaying the last buffer — the MAX98357A has no
+     * FIFO of its own, so without this a stall audibly loops the stale samples.
+     * Silence-on-starve, not a stuck loop. */
+    cc.auto_clear = true;
     if (i2s_new_channel(&cc, &txChan, nullptr) != ESP_OK) { warn("audio: tx new_channel\n"); return; }
     i2s_std_config_t cfg = {
       .clk_cfg  = I2S_STD_CLK_DEFAULT_CONFIG(currentRate),
