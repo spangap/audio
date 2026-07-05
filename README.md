@@ -22,7 +22,7 @@ mics) is pure Kconfig with no code.
 Build for the LilyGo T-Deck Plus (ES7210 mic + MAX98357A speaker):
 
 ```
-spangap build reticulous/reticulous --with reticulous/hw-tdeck --with spangap/audio
+spangap build reticulous/reticulous --with spangap/hw-tdeck --with spangap/audio
 ```
 
 ## Origins
