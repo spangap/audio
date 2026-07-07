@@ -582,7 +582,7 @@ void audioStopWav(int id) {
   itsSendAuxByTaskHandle(audioTask, AUDIO_CTRL_PORT, &m, sizeof(m), pdMS_TO_TICKS(500));
 }
 
-void audioInit() {
+void AudioService::onInit() {
   if (storageGetInt("s.audio.version", 0) < AUDIO_VERSION) {
     storageDefault("s.audio.rate", CONFIG_AUDIO_RATE_DEFAULT);
     storageDefault("s.audio.block_ms", CONFIG_AUDIO_BLOCK_MS_DEFAULT);

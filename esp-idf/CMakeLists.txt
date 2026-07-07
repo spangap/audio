@@ -10,7 +10,8 @@ idf_component_register(
         "audio.cpp"
         "codec.cpp"
         "wav.cpp"
-    INCLUDE_DIRS "."
+        ${SPANGAP_CONDITIONAL_SRCS}
+    INCLUDE_DIRS "." ${SPANGAP_CONDITIONAL_INCLUDE_DIRS}
     REQUIRES
         ${SPANGAP_REQUIRES}
         esp_driver_i2s

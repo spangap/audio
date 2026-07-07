@@ -21,14 +21,18 @@
 
 #include <stdint.h>
 #include "codec.h"   /* audio_codec_t + format helpers */
+#include "service.h"
 
 /* DataChannel label "audio:1": clients connect here for full-duplex audio. */
 static constexpr uint16_t AUDIO_STREAM_PORT = 1;
 
-/** Bring-up hook — folded into the generated spangapInitStraddles() in
- *  dependency order. Plain C++ linkage (NOT extern "C"); the generated
- *  dispatcher forward-declares it as `void audioInit(void);`. */
-void audioInit();
+/** Bring-up service — constructed and registered by the generated dispatcher
+ *  in dependency order. onInit() seeds storage defaults, registers the CLI,
+ *  and spawns the audio task. */
+class AudioService : public Service {
+public:
+    void onInit() override;
+};
 
 /* ---- Board codec control plane (optional) ---- */
 

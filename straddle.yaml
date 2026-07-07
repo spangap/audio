@@ -17,8 +17,9 @@ firmware: esp-idf
 platforms: [idf]
 requires:
   - spangap/spangap-net
-# Auto-init: folded into the buildable's generated spangapInitStraddles().
-# audioInit() seeds storage defaults, registers the CLI, and spawns the audio
-# task (which opens its ITS server and brings I2S up lazily on first use).
-init:
-  - call: audioInit
+# Boot service: constructed and registered by the buildable's generated
+# dispatcher. AudioService::onInit() seeds storage defaults, registers the CLI,
+# and spawns the audio task (which opens its ITS server and brings I2S up
+# lazily on first use).
+services:
+  - { class: AudioService, header: audio.h }
