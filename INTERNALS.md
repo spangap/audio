@@ -166,3 +166,14 @@ Capture and playback run concurrently only because the mic and speaker sit on
 has `SOC_I2S_NUM = 2`). On a part with one controller they cannot overlap. The
 board-specific pin sets and any input-codec register sequence (e.g. the ES7210
 on the T-Deck) live in that board's audio shim, not here.
+
+## TCP transport (future)
+
+The DataChannel path is the only network transport today. The designed LAN path
+is a TCP listener registered with net: one `net_port_msg_t`
+(`nvsKey = "audio_port"`, `defaultPort = 0`) sent via
+`itsSendAux("net", NET_PORT_REG_PORT, …)`, so the listener opens only when the
+user sets `s.net.audio_port`. What makes it non-trivial: TCP is stream-mode, so
+the device must length-prefix each `[av_hdr][payload]` unit over the byte
+stream — on the packet-native DataChannel path message boundaries come for
+free.
