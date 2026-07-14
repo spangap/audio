@@ -584,12 +584,14 @@ void audioStopWav(int id) {
 
 void AudioService::onInit() {
   if (storageGetInt("s.audio.version", 0) < AUDIO_VERSION) {
+    storageBegin();
     storageDefault("s.audio.rate", CONFIG_AUDIO_RATE_DEFAULT);
     storageDefault("s.audio.block_ms", CONFIG_AUDIO_BLOCK_MS_DEFAULT);
     storageDefault("s.audio.codec", "ulaw16k");
     storageDefault("s.audio.out_gain", 256);
     storageDefault("s.audio.mic_gain", 1);
     storageSet("s.audio.version", AUDIO_VERSION);
+    storageEnd();
   }
   pmLockCreate(PM_NO_LIGHT_SLEEP, "audio", &pmLock);
   cliRegisterCmd("audio", audioCliCmd);
