@@ -67,7 +67,9 @@ void audioRegisterCodec(const audio_codec_ops_t* ops);
  *   - Returns a stream id (>= 0) for audioStopWav(), or < 0 on error
  *     (no output configured / missing file / bad format / wrong rate).
  *  Safe to call from any task. */
-int  audioPlayWav(const char* path);
+/** Play a WAV file. `gainPct` scales this playback's amplitude (100 = unchanged,
+ *  50 = half); it composes with the global s.audio.out_gain. Returns a play id. */
+int  audioPlayWav(const char* path, int gainPct = 100);
 
 /** Stop a WAV stream by id; -1 stops all. */
 void audioStopWav(int id);

@@ -73,6 +73,7 @@ struct client_t {
 struct wavslot_t {
   int          id = -1;              /* >= 0 = active */
   uint32_t     played = 0;           /* samples mixed so far (diagnostic) */
+  int32_t      gain = 256;           /* per-play amplitude, 8.8 fixed (256 = unity) */
   wav_stream_t st;
 };
 
@@ -112,6 +113,7 @@ static int16_t* decIn   = nullptr;   /* PSRAM: inbound decode scratch     */
 struct ctrl_msg_t {
   uint8_t      cmd;
   int32_t      id;
+  int32_t      gain;   /* PLAY: per-play amplitude, 8.8 fixed (256 = unity) */
   wav_stream_t st;     /* valid for PLAY: fd + read-ahead buffer handed over */
 };
 
@@ -232,7 +234,7 @@ static void audioCtrlHandler(TaskHandle_t /*sender*/, const void* data, size_t l
   if (m->cmd == AUDIO_CMD_PLAY && len >= sizeof(ctrl_msg_t)) {
     for (auto& w : wavs)
       if (w.id < 0) {
-        w.st = m->st; w.id = m->id; w.played = 0;
+        w.st = m->st; w.id = m->id; w.played = 0; w.gain = m->gain ? m->gain : 256;
         s_playStartUs = esp_timer_get_time();
         dbg("play start: id=%d fmt=%u bytes=%u\n",
              m->id, (unsigned)m->st.fmt, (unsigned)m->st.dataLeft);
@@ -488,7 +490,7 @@ static void audioTaskFn(void*) {
                (int)((esp_timer_get_time() - s_playStartUs) / 1000));
           wavClose(&w.st); w.id = -1; continue;
         }
-        for (size_t i = 0; i < n; i++) acc[i] += decTmp[i];
+        for (size_t i = 0; i < n; i++) acc[i] += (decTmp[i] * w.gain) >> 8;   /* per-play gain */
         w.played += n;
         haveOut = true;
       }
@@ -557,7 +559,7 @@ void audioRegisterCodec(const audio_codec_ops_t* ops) {
   codecOps = ops;
 }
 
-int audioPlayWav(const char* path) {
+int audioPlayWav(const char* path, int gainPct) {
   if (!OUT_ENABLED || !audioTask || !path || !path[0]) return -1;
   uint32_t rate = storageGetInt("audio.sample_rate", 0);
   if (!rate) rate = storageGetInt("s.audio.rate", CONFIG_AUDIO_RATE_DEFAULT);
@@ -565,6 +567,8 @@ int audioPlayWav(const char* path) {
 
   ctrl_msg_t m = {};
   m.cmd = AUDIO_CMD_PLAY;
+  if (gainPct < 0) gainPct = 0;
+  m.gain = gainPct * 256 / 100;   /* percent → 8.8 fixed */
   if (!wavOpen(path, rate, ahead, &m.st)) return -1;
   m.id = wavIdCounter.fetch_add(1) + 1;          /* ids start at 1 */
   if (!itsSendAuxByTaskHandle(audioTask, AUDIO_CTRL_PORT, &m, sizeof(m), pdMS_TO_TICKS(500))) {
